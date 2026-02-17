@@ -1,0 +1,75 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  UPYLOL — Docker Compose DEV override                      ║
+# ║  Uso: docker compose -f docker-compose.yml                 ║
+# ║       -f docker-compose.dev.yml up                         ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: deps
+    volumes:
+      - ./backend/app:/app/app:cached
+      - ./backend/tests:/app/tests:cached
+      - ./backend/alembic:/app/alembic:cached
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+    # Disable production healthcheck (httpx may not be installed in deps)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/src:/app/src:cached
+      - ./frontend/public:/app/public:cached
+      - ./frontend/next.config.ts:/app/next.config.ts:cached
+      - frontend-node-modules:/app/node_modules
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - WATCHPACK_POLLING=true
+    # Override healthcheck for dev
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  db:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  nginx:
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    # In dev, don't wait for full healthchecks
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+
+volumes:
+  frontend-node-modules:
+    driver: local

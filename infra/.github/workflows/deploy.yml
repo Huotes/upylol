@@ -1,0 +1,147 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  UPYLOL — Deploy Pipeline                                   ║
+# ║  Trigger: manual dispatch or tag push (v*)                   ║
+# ║  Builds images, pushes to registry, deploys via SSH          ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deploy environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/upylol
+
+jobs:
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: ${{ vars.DEPLOY_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy deployment files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "docker-compose.yml,docker-compose.prod.yml,nginx/,scripts/"
+          target: ${{ vars.DEPLOY_PATH || '/opt/upylol' }}
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ vars.DEPLOY_PATH || '/opt/upylol' }}
+
+            # Pull latest images
+            echo "📦 Pulling images..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml pull backend frontend
+
+            # Run migrations
+            echo "🗃️ Running migrations..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+              run --rm backend alembic upgrade head
+
+            # Deploy with zero downtime
+            echo "🚀 Deploying..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+              up -d --remove-orphans
+
+            # Cleanup old images
+            docker image prune -f
+
+            echo "✅ Deploy complete!"
+
+      - name: Health check
+        run: |
+          echo "⏳ Aguardando serviços..."
+          sleep 30
+          STATUS=$(curl -sf "${{ vars.DEPLOY_URL }}/health" | jq -r '.status' 2>/dev/null || echo "fail")
+          if [ "$STATUS" = "ok" ]; then
+            echo "✅ Health check passed!"
+          else
+            echo "❌ Health check failed!"
+            exit 1
+          fi
+
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+
+    steps:
+      - name: Deploy result
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "✅ Deploy successful"
+          else
+            echo "❌ Deploy failed"
+          fi

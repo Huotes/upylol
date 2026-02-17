@@ -1,0 +1,97 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  UPYLOL — Docker Compose PROD override                     ║
+# ║  Uso: docker compose -f docker-compose.yml                 ║
+# ║       -f docker-compose.prod.yml up -d                     ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      uvicorn app.main:app
+        --host 0.0.0.0
+        --port 8000
+        --workers ${BACKEND_WORKERS:-4}
+        --loop uvloop
+        --http httptools
+        --log-level warning
+        --access-log
+    environment:
+      - DEBUG=false
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    command: >
+      postgres
+        -c shared_buffers=256MB
+        -c effective_cache_size=768MB
+        -c work_mem=8MB
+        -c maintenance_work_mem=128MB
+        -c max_connections=100
+        -c logging_collector=on
+        -c log_min_duration_statement=500
+        -c log_checkpoints=on
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+
+  redis:
+    command: >
+      redis-server
+        --appendonly yes
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru
+        --save 300 100
+        --tcp-backlog 511
+        --timeout 300
+
+  nginx:
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
