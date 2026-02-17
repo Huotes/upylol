@@ -22,16 +22,6 @@ PLATFORM_TO_REGION: dict[str, str] = {
     "vn2": "asia",
 }
 
-PLATFORM_BASE_URLS: dict[str, str] = {
-    platform: f"https://{platform}.api.riotgames.com"
-    for platform in PLATFORM_TO_REGION
-}
-
-REGION_BASE_URLS: dict[str, str] = {
-    region: f"https://{region}.api.riotgames.com"
-    for region in {"americas", "europe", "asia"}
-}
-
 
 class QueueType(StrEnum):
     """Common queue IDs."""

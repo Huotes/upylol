@@ -41,7 +41,7 @@ async def close_db() -> None:
     await engine.dispose()
 
 
-async def get_session() -> AsyncGenerator[AsyncSession]:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Yield an async database session (FastAPI dependency)."""
     async with async_session() as session:
         yield session

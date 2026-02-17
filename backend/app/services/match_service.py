@@ -1,11 +1,14 @@
 """Match history service — fetch and cache match data."""
 
 import asyncio
+import logging
 from typing import Any
 
 from app.config import settings
 from app.riot.client import RiotClient
 from app.services.cache_service import CacheService
+
+logger = logging.getLogger(__name__)
 
 
 class MatchService:
@@ -27,14 +30,23 @@ class MatchService:
             puuid, platform, count=count, queue=queue,
         )
 
-        # Fetch matches concurrently, using cache where possible
         tasks = [
             self._get_or_fetch_match(mid, platform) for mid in match_ids
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Filter out errors, keep valid matches
-        return [r for r in results if isinstance(r, dict)]
+        matches: list[dict[str, Any]] = []
+        for i, result in enumerate(results):
+            if isinstance(result, BaseException):
+                logger.warning(
+                    "Failed to fetch match %s: %s",
+                    match_ids[i],
+                    result,
+                )
+                continue
+            if isinstance(result, dict):
+                matches.append(result)
+        return matches
 
     async def _get_or_fetch_match(
         self,

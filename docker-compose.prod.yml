@@ -83,9 +83,9 @@ services:
 
   nginx:
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infra/nginx/ssl:/etc/nginx/ssl:ro
       - nginx-cache:/var/cache/nginx
     ports:
       - "80:80"

@@ -1,5 +1,7 @@
 """Pydantic response models for API endpoints."""
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -25,7 +27,7 @@ class PlayerProfile(BaseModel):
     summoner_level: int
     profile_icon_id: int
     ranked: RankedInfo
-    top_mastery: list[dict]
+    top_mastery: list[dict[str, Any]]
 
 
 class DimensionResponse(BaseModel):
@@ -89,7 +91,7 @@ class AnalysisResponse(BaseModel):
     diagnostics: list[DiagnosticResponse]
     best_champions: list[ChampionResponse]
     mains: list[str]
-    champion_pool: dict
+    champion_pool: dict[str, Any]
     trends: list[TrendResponse]
 
 

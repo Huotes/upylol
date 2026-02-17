@@ -60,7 +60,7 @@ services:
 
   nginx:
     volumes:
-      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "80:80"
     # In dev, don't wait for full healthchecks

@@ -11,7 +11,7 @@ from app.riot.client import RiotClient
 from app.services.cache_service import CacheService
 
 
-async def get_db() -> AsyncGenerator[AsyncSession]:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Database session dependency."""
     async for session in get_session():
         yield session
@@ -19,7 +19,7 @@ async def get_db() -> AsyncGenerator[AsyncSession]:
 
 @lru_cache(maxsize=1)
 def get_riot_client() -> RiotClient:
-    """Singleton Riot API client."""
+    """Singleton Riot API client (closed via lifespan shutdown)."""
     return RiotClient()
 
 

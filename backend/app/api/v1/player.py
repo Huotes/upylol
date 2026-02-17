@@ -1,6 +1,6 @@
 """Player profile endpoints."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Path
 
@@ -20,12 +20,21 @@ router = APIRouter()
     summary="Get player profile by Riot ID",
 )
 async def get_player(
-    platform: Annotated[str, Path(description="Platform (br1, na1, euw1...)")],
-    game_name: Annotated[str, Path(description="Game name part of Riot ID")],
-    tag_line: Annotated[str, Path(description="Tag line part of Riot ID")],
+    platform: Annotated[
+        str,
+        Path(description="Platform (br1, na1, euw1...)", min_length=2, max_length=5),
+    ],
+    game_name: Annotated[
+        str,
+        Path(description="Game name part of Riot ID", min_length=1, max_length=16),
+    ],
+    tag_line: Annotated[
+        str,
+        Path(description="Tag line part of Riot ID", min_length=1, max_length=5),
+    ],
     riot: Annotated[RiotClient, Depends(get_riot_client)],
     cache: Annotated[CacheService, Depends(get_cache_service)],
-) -> dict:
+) -> dict[str, Any]:
     """Fetch complete player profile including ranked data and masteries."""
     service = PlayerService(riot, cache)
     return await service.get_profile(game_name, tag_line, platform)

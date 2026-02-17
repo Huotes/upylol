@@ -1,3 +1,5 @@
+import { ddragon } from "./ddragon";
+
 /** Dimension display labels (PT-BR) */
 export const DIMENSION_LABELS: Record<string, string> = {
   farming: "Farm",
@@ -18,6 +20,18 @@ export const QUEUE_LABELS: Record<number, string> = {
   450: "ARAM",
 };
 
+/** Queue display names (alias) */
+export const QUEUE_NAMES = QUEUE_LABELS;
+
+/** Position display labels */
+export const POSITION_NAMES: Record<string, string> = {
+  TOP: "Top",
+  JUNGLE: "Jungle",
+  MIDDLE: "Mid",
+  BOTTOM: "ADC",
+  UTILITY: "Support",
+};
+
 /** Tier colors for ranked badges */
 export const TIER_COLORS: Record<string, string> = {
   IRON: "#6b6b6b",
@@ -32,3 +46,9 @@ export const TIER_COLORS: Record<string, string> = {
   CHALLENGER: "#f0c040",
   UNRANKED: "#555555",
 };
+
+/** Champion icon URL helper (re-exports ddragon) */
+export const getChampionIconUrl = ddragon.championIcon;
+
+/** Item icon URL helper (re-exports ddragon) */
+export const getItemIconUrl = ddragon.itemIcon;

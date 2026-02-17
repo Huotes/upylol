@@ -1,5 +1,6 @@
 """Centralized application settings via environment variables."""
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,11 +24,12 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = (
-        "postgresql+asyncpg://upylol:upylol@localhost:5432/upylol"
+        "postgresql+asyncpg://${DB_USER:-upylol}:${DB_PASSWORD:-upylol}"
+        "@db:5432/${DB_NAME:-upylol}"
     )
 
     # Redis
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://redis:6379/0"
 
     # Cache TTLs (seconds)
     CACHE_TTL_PLAYER: int = 300
@@ -37,6 +39,17 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+
+    @model_validator(mode="after")
+    def _validate_required(self) -> "Settings":
+        """Fail fast if critical settings are missing."""
+        if not self.RIOT_API_KEY:
+            msg = (
+                "RIOT_API_KEY is required. "
+                "Get one at https://developer.riotgames.com"
+            )
+            raise ValueError(msg)
+        return self
 
 
 settings = Settings()
