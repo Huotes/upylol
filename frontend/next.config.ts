@@ -16,10 +16,13 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
+    // BACKEND_URL aponta para o serviço Docker (server-side).
+    // NEXT_PUBLIC_API_URL é para o browser (client-side) e não deve ser usado aqui.
+    const backendUrl = process.env.BACKEND_URL ?? "http://backend:8000";
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/:path*`,
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },

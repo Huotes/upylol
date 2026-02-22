@@ -43,7 +43,8 @@ services:
     container_name: upylol-frontend
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000/api
+      - NEXT_PUBLIC_API_URL=/api
+      - BACKEND_URL=http://backend:8000
       - NEXT_PUBLIC_DDRAGON_VERSION=${DDRAGON_VERSION:-15.3.1}
     depends_on:
       backend:
