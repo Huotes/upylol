@@ -9,7 +9,7 @@ pool: redis.Redis | None = None
 
 async def init_redis() -> None:
     """Initialize Redis connection pool."""
-    global pool  # noqa: PLW0603
+    global pool
     pool = redis.from_url(
         settings.REDIS_URL,
         decode_responses=True,

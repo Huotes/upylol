@@ -78,7 +78,7 @@ def analyze_champions(
 
 
 def _rank_score(champ: ChampionPerformance) -> float:
-    """Weighted ranking: win rate × games played × kda factor."""
+    """Weighted ranking: win rate x games played x kda factor."""
     game_weight = min(champ.games / 10.0, 1.0)  # caps at 10 games
     kda_factor = min(champ.avg_kda / 3.0, 1.5)  # normalize around 3.0 KDA
     return champ.win_rate * game_weight * kda_factor

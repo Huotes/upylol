@@ -47,6 +47,37 @@ export const TIER_COLORS: Record<string, string> = {
   UNRANKED: "#555555",
 };
 
+/** Severity colors for diagnostics */
+export const SEVERITY_COLORS: Record<string, string> = {
+  critical: "#ef4444",
+  important: "#f59e0b",
+  suggestion: "#3b82f6",
+  info: "#6b7280",
+};
+
+/** Severity labels (PT-BR) */
+export const SEVERITY_LABELS: Record<string, string> = {
+  critical: "Crítico",
+  important: "Importante",
+  suggestion: "Sugestão",
+  info: "Info",
+};
+
+/** Available platforms */
+export const PLATFORMS = [
+  { value: "br1", label: "BR" },
+  { value: "na1", label: "NA" },
+  { value: "euw1", label: "EUW" },
+  { value: "eun1", label: "EUNE" },
+  { value: "kr", label: "KR" },
+  { value: "jp1", label: "JP" },
+  { value: "la1", label: "LAN" },
+  { value: "la2", label: "LAS" },
+  { value: "oc1", label: "OCE" },
+  { value: "tr1", label: "TR" },
+  { value: "ru", label: "RU" },
+] as const;
+
 /** Champion icon URL helper (re-exports ddragon) */
 export const getChampionIconUrl = ddragon.championIcon;
 

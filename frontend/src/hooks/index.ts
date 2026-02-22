@@ -1,4 +1,4 @@
 export { usePlayer } from "./usePlayer";
-export { useMatches, matchKeys } from "./useMatches";
-export { useAnalysis, analysisKeys } from "./useAnalysis";
-export { useChampions, championKeys } from "./useChampions";
+export { useMatches } from "./useMatches";
+export { useAnalysis } from "./useAnalysis";
+export { useChampions } from "./useChampions";

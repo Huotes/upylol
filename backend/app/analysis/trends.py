@@ -32,10 +32,7 @@ def _compute_trend(
     early_avg = sum(early) / len(early) if early else 0
     recent_avg = sum(recent) / len(recent) if recent else 0
 
-    if early_avg == 0:
-        change = 0.0
-    else:
-        change = (recent_avg - early_avg) / early_avg
+    change = 0.0 if early_avg == 0 else (recent_avg - early_avg) / early_avg
 
     if invert:
         change = -change

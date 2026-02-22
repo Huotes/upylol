@@ -15,10 +15,10 @@ class DimensionScore:
     """Score for a single performance dimension."""
 
     name: str
-    score: float        # 0–100
+    score: float        # 0-100
     raw_value: float
     benchmark: float
-    percentile: float   # 0–99
+    percentile: float   # 0-99
 
 
 @dataclass(frozen=True)
@@ -44,7 +44,7 @@ WEIGHTS: dict[str, float] = {
 
 
 def _ratio_to_score(ratio: float) -> float:
-    """Convert a benchmark ratio to a 0–100 score."""
+    """Convert a benchmark ratio to a 0-100 score."""
     return min(100.0, max(0.0, ratio * 50.0))
 
 

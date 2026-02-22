@@ -1,10 +1,10 @@
 export { Badge } from "./Badge";
 export { Button } from "./Button";
-export { Card, CardHeader, CardContent, CardTitle } from "./Card";
+export { Card, CardTitle } from "./Card";
 export { ErrorDisplay } from "./ErrorDisplay";
 export { ScoreBar } from "./ScoreBar";
 export { ScoreRing } from "./ScoreRing";
-export { Skeleton, SkeletonCard, SkeletonMatchRow } from "./Skeleton";
+export { Skeleton, CardSkeleton } from "./Skeleton";
 export { ErrorState, EmptyState } from "./States";
 export { Tabs } from "./Tabs";
 export { Tooltip } from "./Tooltip";
