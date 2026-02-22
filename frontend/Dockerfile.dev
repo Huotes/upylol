@@ -4,8 +4,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Install deps first (cached layer)
+# Copy all config files needed by Next.js
 COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+COPY tsconfig.json next.config.ts postcss.config.mjs tailwind.config.ts ./
 
 RUN \
   if [ -f yarn.lock ]; then yarn install; \

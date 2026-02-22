@@ -1,3 +1,6 @@
+// Tailwind v4 usa configuracao via CSS (@theme em globals.css).
+// Este arquivo existe para compatibilidade com ferramentas que
+// esperam um tailwind.config (ex: IDE plugins, prettier-plugin-tailwindcss).
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -5,22 +8,7 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  theme: {
-    extend: {
-      colors: {
-        iron: "#6b6b6b",
-        bronze: "#a0522d",
-        silver: "#b0b0b0",
-        gold: "#daa520",
-        platinum: "#00c9a7",
-        emerald: "#50c878",
-        diamond: "#b9f2ff",
-        master: "#9370db",
-        grandmaster: "#ff4444",
-        challenger: "#f0c040",
-      },
-    },
-  },
+  theme: {},
   plugins: [],
 };
 

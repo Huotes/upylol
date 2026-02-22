@@ -6,10 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# ── Deps: instala apenas dependencias ──
 FROM base AS deps
 COPY pyproject.toml .
-RUN pip install --no-cache-dir -e ".[dev]"
+# Criar diretorio minimo para o setuptools encontrar o pacote
+RUN mkdir -p app && touch app/__init__.py \
+    && pip install --no-cache-dir ".[dev]"
 
+# ── Runtime: copia codigo fonte ──
 FROM deps AS runtime
 COPY . .
 EXPOSE 8000
