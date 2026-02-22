@@ -128,13 +128,17 @@ class RiotClient:
 
     async def get_league_entries(
         self,
-        summoner_id: str,
+        puuid: str,
         platform: str = "br1",
     ) -> list[dict[str, Any]]:
-        """Get ranked league entries for a summoner."""
+        """Get ranked league entries by PUUID.
+
+        Uses the PUUID-based endpoint (post July 2025 migration).
+        The old summoner-id endpoint is deprecated.
+        """
         return await self._request(
             self._platform_url(platform),
-            f"/lol/league/v4/entries/by-summoner/{summoner_id}",
+            f"/lol/league/v4/entries/by-puuid/{puuid}",
             platform,
         )
 
@@ -198,7 +202,7 @@ class RiotClient:
         puuid: str,
         platform: str = "br1",
     ) -> dict[str, Any] | None:
-        """Get live game data. Returns None if not in game."""
+        """Get live game data by PUUID. Returns None if not in game."""
         try:
             return await self._request(
                 self._platform_url(platform),
