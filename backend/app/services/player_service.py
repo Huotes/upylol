@@ -1,5 +1,9 @@
-"""Player profile service — orchestrates Riot API calls into a profile."""
+"""Player profile service — orchestrates Riot API calls into a profile.
 
+Optimized with asyncio.gather for parallel API calls where possible.
+"""
+
+import asyncio
 import logging
 from typing import Any
 
@@ -24,20 +28,21 @@ class PlayerService:
         tag_line: str,
         platform: str = "br1",
     ) -> dict[str, Any]:
-        """Fetch full player profile: account + summoner + ranked + mastery.
+        """Fetch full player profile with parallel API calls.
 
-        Flow (all PUUID-based, post July 2025 migration):
-            1. Account V1 (continental) → resolve Riot ID to PUUID
-            2. Summoner V4 (platform)   → level, icon
-            3. League V4 by PUUID       → ranked entries
-            4. Champion Mastery V4      → top champions
+        Flow:
+            1. Account V1 (continental) -> resolve Riot ID to PUUID
+            2. In parallel:
+               - Summoner V4 (platform) -> level, icon
+               - League V4 by PUUID    -> ranked entries
+               - Champion Mastery V4   -> top champions
         """
         cache_key = CacheService.key("player", platform, game_name, tag_line)
         cached = await self._cache.get(cache_key)
         if cached:
             return cached
 
-        # 1. Resolve Riot ID -> PUUID
+        # 1. Resolve Riot ID -> PUUID (must be first, others depend on it)
         try:
             account = await self._riot.get_account_by_riot_id(
                 game_name, tag_line, platform,
@@ -52,33 +57,24 @@ class PlayerService:
             logger.error("Account response missing puuid: %s", account)
             raise AppError("Invalid account data from Riot API", 502)
 
-        # 2. Fetch summoner data (level, icon)
-        summoner = await self._riot.get_summoner_by_puuid(puuid, platform)
+        # 2. Fetch summoner, ranked, and mastery IN PARALLEL
+        summoner_task = self._riot.get_summoner_by_puuid(puuid, platform)
+        league_task = self._safe_fetch(
+            self._riot.get_league_entries(puuid, platform),
+            default=[],
+            label="league_entries",
+        )
+        mastery_task = self._safe_fetch(
+            self._riot.get_champion_mastery_top(puuid, platform, count=10),
+            default=[],
+            label="mastery",
+        )
 
-        # 3. Fetch ranked entries directly by PUUID
-        #    (summoner_id foi removido da resposta do Summoner V4 em Jul/2025)
-        league_entries: list[dict[str, Any]] = []
-        try:
-            league_entries = await self._riot.get_league_entries(puuid, platform)
-        except RiotAPIError:
-            logger.warning(
-                "Failed to fetch league entries for puuid=%s",
-                puuid,
-                exc_info=True,
-            )
+        summoner, league_entries, mastery = await asyncio.gather(
+            summoner_task, league_task, mastery_task,
+        )
 
-        # 4. Fetch champion mastery
-        mastery: list[dict[str, Any]] = []
-        try:
-            mastery = await self._riot.get_champion_mastery_top(
-                puuid, platform, count=10,
-            )
-        except RiotAPIError:
-            logger.warning(
-                "Failed to fetch mastery for puuid=%s", puuid, exc_info=True,
-            )
-
-        # 5. Extract ranked solo queue data
+        # 3. Extract ranked solo queue data
         ranked_solo = next(
             (e for e in league_entries if e.get("queueType") == "RANKED_SOLO_5x5"),
             None,
@@ -97,6 +93,19 @@ class PlayerService:
 
         await self._cache.set(cache_key, profile, settings.CACHE_TTL_PLAYER)
         return profile
+
+    @staticmethod
+    async def _safe_fetch(
+        coro: Any,
+        default: Any = None,
+        label: str = "unknown",
+    ) -> Any:
+        """Execute a coroutine, returning default on RiotAPIError."""
+        try:
+            return await coro
+        except RiotAPIError:
+            logger.warning("Failed to fetch %s", label, exc_info=True)
+            return default
 
 
 def _format_ranked(entry: dict[str, Any] | None) -> dict[str, Any]:

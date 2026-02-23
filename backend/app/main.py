@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.config import settings
 from app.core.database import close_db, init_db
-from app.core.dependencies import get_riot_client
+from app.core.dependencies import get_ddragon_service, get_riot_client
 from app.core.exceptions import AppError, app_error_handler
 from app.core.redis import close_redis, init_redis
 
@@ -19,6 +19,9 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
     """Manage startup and shutdown lifecycle events."""
     await init_db()
     await init_redis()
+    # Pre-load DDragon data on startup (champions, items, version)
+    ddragon = get_ddragon_service()
+    await ddragon.ensure_loaded()
     yield
     await get_riot_client().close()
     await close_db()

@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Use unoptimized to bypass Next.js image proxy for DDragon CDN.
+    // This prevents 403/504 errors from the _next/image endpoint
+    // and loads images directly from Riot's CDN (faster).
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
