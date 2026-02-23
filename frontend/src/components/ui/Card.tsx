@@ -4,13 +4,16 @@ import type { ReactNode } from "react";
 interface CardProps {
   children: ReactNode;
   className?: string;
+  animate?: boolean;
 }
 
-export function Card({ children, className }: CardProps) {
+export function Card({ children, className, animate = true }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-bg-card p-5",
+        "rounded-xl border border-border bg-bg-card p-5 transition-all duration-300",
+        "hover:border-border/80 hover:shadow-lg hover:shadow-accent/5",
+        animate && "animate-fade-in-up",
         className,
       )}
     >

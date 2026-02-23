@@ -57,6 +57,7 @@ class DiagnosticResponse(BaseModel):
     title: str
     description: str
     recommendation: str
+    data: dict[str, Any] = {}
 
 
 class ChampionResponse(BaseModel):

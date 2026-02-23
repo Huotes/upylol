@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rajdhani, JetBrains_Mono } from "next/font/google";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { DdragonInit } from "@/lib/DdragonInit";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
@@ -44,6 +45,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${rajdhani.variable} ${jetbrains.variable}`}>
       <body className="flex min-h-screen flex-col">
         <QueryProvider>
+          <DdragonInit />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />

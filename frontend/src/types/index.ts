@@ -51,6 +51,7 @@ export interface Diagnostic {
   title: string;
   description: string;
   recommendation: string;
+  data?: Record<string, unknown>;
 }
 
 export interface ChampionPerformance {
@@ -159,3 +160,14 @@ export const REGION_LABELS: Record<Region, string> = {
   tr1: "Turkey",
   ru: "Russia",
 };
+
+/* ── Game count filter options ─────────────────────── */
+
+export const GAME_COUNT_OPTIONS = [
+  { value: 10, label: "10 games" },
+  { value: 20, label: "20 games" },
+  { value: 30, label: "30 games" },
+  { value: 100, label: "Temporada" },
+] as const;
+
+export type GameCount = (typeof GAME_COUNT_OPTIONS)[number]["value"];

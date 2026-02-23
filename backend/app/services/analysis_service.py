@@ -86,6 +86,7 @@ class AnalysisService:
                     "title": d.title,
                     "description": d.description,
                     "recommendation": d.recommendation,
+                    "data": d.data,
                 }
                 for d in diagnostics
             ],

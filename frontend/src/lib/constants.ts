@@ -57,9 +57,10 @@ export const SEVERITY_COLORS: Record<string, string> = {
 
 /** Severity labels (PT-BR) */
 export const SEVERITY_LABELS: Record<string, string> = {
-  critical: "Crítico",
+  critical: "Critico",
   important: "Importante",
-  suggestion: "Sugestão",
+  minor: "Menor",
+  suggestion: "Sugestao",
   info: "Info",
 };
 

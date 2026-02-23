@@ -1,9 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import { ddragon } from "@/lib/ddragon";
 import { cn } from "@/lib/cn";
 import { formatKDA, formatDuration, formatNumber } from "@/lib/formatters";
 import { QUEUE_LABELS } from "@/lib/constants";
-import type { MatchData, MatchParticipant } from "@/types";
+import type { MatchData } from "@/types";
 
 interface MatchCardProps {
   match: MatchData;
@@ -14,13 +16,23 @@ export function MatchCard({ match, puuid }: MatchCardProps) {
   const participant = match.info.participants.find((p) => p.puuid === puuid);
   if (!participant) return null;
 
+  const items = [
+    participant.item0,
+    participant.item1,
+    participant.item2,
+    participant.item3,
+    participant.item4,
+    participant.item5,
+    participant.item6,
+  ].filter((id) => id > 0);
+
   return (
     <div
       className={cn(
-        "flex items-center gap-4 rounded-lg border p-3 transition-colors",
+        "flex items-center gap-4 rounded-lg border p-3 transition-all duration-200 hover:translate-x-0.5",
         participant.win
-          ? "border-win/20 bg-win/5"
-          : "border-loss/20 bg-loss/5",
+          ? "border-win/20 bg-win/5 hover:bg-win/10"
+          : "border-loss/20 bg-loss/5 hover:bg-loss/10",
       )}
     >
       {/* Result bar */}
@@ -37,14 +49,23 @@ export function MatchCard({ match, puuid }: MatchCardProps) {
         alt={participant.championName}
         width={48}
         height={48}
-        className="rounded-lg"
+        className="rounded-lg border border-border"
+        unoptimized
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = ddragon.placeholder;
+        }}
       />
 
       {/* Info */}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={cn("text-sm font-bold", participant.win ? "text-win" : "text-loss")}>
-            {participant.win ? "Vitória" : "Derrota"}
+          <span
+            className={cn(
+              "text-sm font-bold",
+              participant.win ? "text-win" : "text-loss",
+            )}
+          >
+            {participant.win ? "Vitoria" : "Derrota"}
           </span>
           <span className="text-xs text-text-secondary">
             {QUEUE_LABELS[match.info.queueId] ?? "Custom"} ·{" "}
@@ -59,7 +80,9 @@ export function MatchCard({ match, puuid }: MatchCardProps) {
       {/* Stats */}
       <div className="hidden text-right sm:block">
         <p className="font-mono text-xs text-text-secondary">
-          {participant.totalMinionsKilled + (participant.neutralMinionsKilled ?? 0)} CS
+          {participant.totalMinionsKilled +
+            (participant.neutralMinionsKilled ?? 0)}{" "}
+          CS
         </p>
         <p className="font-mono text-xs text-text-secondary">
           {formatNumber(participant.totalDamageDealtToChampions)} DMG
@@ -68,26 +91,24 @@ export function MatchCard({ match, puuid }: MatchCardProps) {
 
       {/* Items */}
       <div className="hidden gap-0.5 md:flex">
-        {[
-          participant.item0,
-          participant.item1,
-          participant.item2,
-          participant.item3,
-          participant.item4,
-          participant.item5,
-          participant.item6,
-        ]
-          .filter((id) => id > 0)
-          .map((itemId, i) => (
+        {items.map((itemId, i) => {
+          const src = ddragon.itemIcon(itemId);
+          if (!src) return null;
+          return (
             <Image
               key={`${match.metadata.matchId}-item-${i}`}
-              src={ddragon.itemIcon(itemId)}
+              src={src}
               alt={`Item ${itemId}`}
               width={28}
               height={28}
               className="rounded"
+              unoptimized
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
             />
-          ))}
+          );
+        })}
       </div>
     </div>
   );
