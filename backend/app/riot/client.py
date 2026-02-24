@@ -179,6 +179,23 @@ class RiotClient:
             self._routing_region(platform),
         )
 
+    async def get_match_timeline(
+        self,
+        match_id: str,
+        platform: str = "br1",
+    ) -> dict[str, Any]:
+        """Get match timeline (per-minute frames + events).
+
+        Returns participant gold/xp/cs snapshots per minute plus
+        events like kills, tower destructions, dragon/baron kills.
+        Timeline data is retained for ~1 year by Riot.
+        """
+        return await self._request(
+            self._region_url(platform),
+            f"/lol/match/v5/matches/{match_id}/timeline",
+            self._routing_region(platform),
+        )
+
     # -- Champion Mastery V4 (platform routing) --
 
     async def get_champion_mastery_top(

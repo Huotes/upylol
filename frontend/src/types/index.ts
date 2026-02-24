@@ -161,6 +161,117 @@ export const REGION_LABELS: Record<Region, string> = {
   ru: "Russia",
 };
 
+/* ── Match Detail ──────────────────────────────────── */
+
+export interface ParticipantDetail {
+  puuid: string;
+  champion_name: string;
+  team_id: number;
+  position: string;
+  win: boolean;
+  kills: number;
+  deaths: number;
+  assists: number;
+  cs: number;
+  cs_per_min: number;
+  gold_earned: number;
+  gold_per_min: number;
+  damage_dealt: number;
+  damage_per_min: number;
+  damage_taken: number;
+  vision_score: number;
+  vision_per_min: number;
+  wards_placed: number;
+  wards_killed: number;
+  kill_participation: number;
+  items: number[];
+  summoner_spells: number[];
+  champion_level: number;
+  summoner_name: string;
+}
+
+export interface DeathEvent {
+  timestamp_sec: number;
+  game_phase: "early" | "mid" | "late";
+  position_x: number;
+  position_y: number;
+  killer: string;
+  assisters: string[];
+  num_enemies: number;
+  description: string;
+}
+
+export interface ObjectiveEvent {
+  timestamp_sec: number;
+  event_type: "dragon" | "baron" | "herald" | "tower" | "inhibitor";
+  team: "ally" | "enemy";
+  subtype: string;
+}
+
+export interface GoldDiffPoint {
+  minute: number;
+  gold_diff: number;
+}
+
+export interface PhaseStats {
+  phase: "early" | "mid" | "late";
+  kills: number;
+  deaths: number;
+  assists: number;
+  cs: number;
+  cs_per_min: number;
+  gold: number;
+  gold_per_min: number;
+}
+
+export interface BenchmarkStat {
+  value: number;
+  benchmark: number;
+  diff: number;
+  percentile: number;
+  tier: string;
+  status: "above" | "below" | "at";
+}
+
+export interface ImprovementPoint {
+  category: string;
+  severity: "critical" | "important" | "minor";
+  title: string;
+  description: string;
+  recommendation: string;
+}
+
+export interface MatchDetailAnalysis {
+  match_id: string;
+  duration_sec: number;
+  duration_min: number;
+  queue_id: number;
+  game_start_timestamp: number;
+  player: ParticipantDetail;
+  player_team: ParticipantDetail[];
+  enemy_team: ParticipantDetail[];
+  stats_vs_benchmark: Record<string, BenchmarkStat>;
+  gold_diff_timeline: GoldDiffPoint[];
+  phase_stats: PhaseStats[];
+  deaths: DeathEvent[];
+  objectives: ObjectiveEvent[];
+  ally_dragons: number;
+  enemy_dragons: number;
+  ally_barons: number;
+  enemy_barons: number;
+  ally_heralds: number;
+  enemy_heralds: number;
+  ally_towers: number;
+  enemy_towers: number;
+  improvement_points: ImprovementPoint[];
+  performance_grade: string;
+}
+
+export interface MatchDetailResponse {
+  match: MatchData;
+  analysis: MatchDetailAnalysis;
+}
+
 /* ── Game count filter options ─────────────────────── */
 
 export const GAME_COUNT_OPTIONS = [

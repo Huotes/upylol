@@ -49,6 +49,10 @@ export const api = {
       if (queue !== undefined) params.set("queue", String(queue));
       return request(`/matches/${puuid}?${params}`);
     },
+    detail: (matchId: string, puuid: string, platform = "br1", tier = "SILVER") => {
+      const params = new URLSearchParams({ puuid, platform, tier });
+      return request(`/matches/${matchId}/detail?${params}`);
+    },
   },
 
   analysis: {
