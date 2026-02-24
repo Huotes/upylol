@@ -5,6 +5,10 @@
  * backend (/api/v1/static/data), which caches DDragon data in Redis.
  * This avoids version mismatches and champion name inconsistencies
  * (e.g., FiddleSticks from Match API vs Fiddlesticks in DDragon).
+ *
+ * Optimized with:
+ * - Promise deduplication (concurrent calls share same request)
+ * - Fallback chain: backend → DDragon CDN → hardcoded version
  */
 
 const DDRAGON_BASE = "https://ddragon.leagueoflegends.com";
@@ -13,7 +17,7 @@ const FALLBACK_VERSION = "15.3.1";
 /** State */
 let resolvedVersion: string = FALLBACK_VERSION;
 let championMap: Record<string, string> = {};
-let fetched = false;
+let initPromise: Promise<string> | null = null;
 
 /** Placeholder for broken/missing images */
 const PLACEHOLDER =
@@ -21,12 +25,16 @@ const PLACEHOLDER =
 
 /**
  * Initialize DDragon data from our backend.
- * Backend caches DDragon in Redis (24h TTL, refreshed per patch).
+ * Deduplicates concurrent calls — only one fetch in flight at a time.
  */
-export async function initDdragonVersion(): Promise<string> {
-  if (fetched) return resolvedVersion;
-  fetched = true;
+export function initDdragonVersion(): Promise<string> {
+  if (initPromise) return initPromise;
+  initPromise = _doInit();
+  return initPromise;
+}
 
+async function _doInit(): Promise<string> {
+  // Try backend first (has champion_map for name resolution)
   try {
     const res = await fetch("/api/v1/static/data");
     if (res.ok) {
@@ -39,7 +47,7 @@ export async function initDdragonVersion(): Promise<string> {
     // Backend unavailable
   }
 
-  // Fallback: DDragon directly
+  // Fallback: DDragon CDN directly (no champion_map)
   try {
     const res = await fetch(`${DDRAGON_BASE}/api/versions.json`);
     if (res.ok) {

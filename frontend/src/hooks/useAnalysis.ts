@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { AnalysisResponse } from "@/types";
 
@@ -21,5 +21,7 @@ export function useAnalysis(
       ) as Promise<AnalysisResponse>,
     enabled: Boolean(gameName && tagLine),
     staleTime: 5 * 60 * 1000,
+    // Keep previous data visible while fetching new count
+    placeholderData: keepPreviousData,
   });
 }

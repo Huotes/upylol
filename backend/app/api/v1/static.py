@@ -1,4 +1,8 @@
-"""Static game data endpoints — cached DDragon data."""
+"""Static game data endpoints — cached DDragon data.
+
+Serves champion, item, and version data with aggressive HTTP caching.
+Data only changes every ~2 weeks (per Riot patch cycle).
+"""
 
 from typing import Annotated, Any
 
@@ -14,18 +18,25 @@ router = APIRouter()
 @router.get(
     "/static/data",
     summary="Get cached game static data (champions, items, version)",
-    response_class=ORJSONResponse,
 )
 async def get_static_data(
     ddragon: Annotated[DDragonService, Depends(get_ddragon_service)],
-) -> dict[str, Any]:
+) -> ORJSONResponse:
     """Return DDragon version, champion map, and item data.
 
     This endpoint is designed to be called once on page load.
     Data is cached for 24 hours in Redis and only changes per patch.
+    Frontend should cache this aggressively.
     """
     await ddragon.ensure_loaded()
-    return ddragon.get_static_data()
+    data = ddragon.get_static_data()
+    return ORJSONResponse(
+        content=data,
+        headers={
+            "Cache-Control": "public, max-age=3600, s-maxage=86400",
+            "X-DDragon-Version": ddragon.version,
+        },
+    )
 
 
 @router.get(
@@ -34,10 +45,13 @@ async def get_static_data(
 )
 async def get_version(
     ddragon: Annotated[DDragonService, Depends(get_ddragon_service)],
-) -> dict[str, str]:
+) -> ORJSONResponse:
     """Return just the current patch version."""
     await ddragon.ensure_loaded()
-    return {"version": ddragon.version}
+    return ORJSONResponse(
+        content={"version": ddragon.version},
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
 
 
 @router.post(
