@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { ddragon } from "@/lib/ddragon";
 import { cn } from "@/lib/cn";
@@ -10,9 +11,12 @@ import type { MatchData } from "@/types";
 interface MatchCardProps {
   match: MatchData;
   puuid: string;
+  region: string;
+  gameName: string;
+  tag: string;
 }
 
-export function MatchCard({ match, puuid }: MatchCardProps) {
+export function MatchCard({ match, puuid, region, gameName, tag }: MatchCardProps) {
   const participant = match.info.participants.find((p) => p.puuid === puuid);
   if (!participant) return null;
 
@@ -26,10 +30,13 @@ export function MatchCard({ match, puuid }: MatchCardProps) {
     participant.item6,
   ].filter((id) => id > 0);
 
+  const detailHref = `/player/${region}/${encodeURIComponent(gameName)}/matches/${match.metadata.matchId}?tag=${encodeURIComponent(tag)}`;
+
   return (
-    <div
+    <Link
+      href={detailHref}
       className={cn(
-        "flex items-center gap-4 rounded-lg border p-3 transition-all duration-200 hover:translate-x-0.5",
+        "flex items-center gap-4 rounded-lg border p-3 transition-all duration-200 hover:translate-x-0.5 cursor-pointer",
         participant.win
           ? "border-win/20 bg-win/5 hover:bg-win/10"
           : "border-loss/20 bg-loss/5 hover:bg-loss/10",
@@ -110,6 +117,6 @@ export function MatchCard({ match, puuid }: MatchCardProps) {
           );
         })}
       </div>
-    </div>
+    </Link>
   );
 }

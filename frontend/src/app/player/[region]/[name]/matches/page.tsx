@@ -92,6 +92,9 @@ export default function MatchesPage({ params }: PageProps) {
               key={match.metadata.matchId}
               match={match}
               puuid={player.data!.puuid}
+              region={region}
+              gameName={gameName}
+              tag={tag}
             />
           ))}
         </div>
