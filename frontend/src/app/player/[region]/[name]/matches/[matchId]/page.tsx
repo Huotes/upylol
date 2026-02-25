@@ -74,7 +74,7 @@ export default function MatchDetailPage({ params }: PageProps) {
   if (detail.isError || !detail.data) {
     return (
       <div className="space-y-6">
-        <ProfileCard player={player.data} />
+        <ProfileCard player={player.data} platform={region} />
         <ErrorDisplay
           title="Partida nao encontrada"
           message="Nao foi possivel carregar os detalhes desta partida."
@@ -88,7 +88,7 @@ export default function MatchDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <ProfileCard player={player.data} />
+      <ProfileCard player={player.data} platform={region} />
       <PlayerNav region={region} name={gameName} tag={tag} />
 
       {/* Back to matches link */}

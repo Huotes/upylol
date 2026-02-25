@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from app.analysis.benchmarks import EloBenchmark, get_benchmark
+from app.analysis.benchmarks import EloBenchmark, get_role_benchmark
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +184,9 @@ class MatchDetailAnalyzer:
             else:
                 enemy_team.append(detail)
 
-        # Benchmark comparison
-        bench = get_benchmark(tier)
+        # Benchmark comparison (role-aware)
+        player_position = player_data.get("teamPosition", "")
+        bench = get_role_benchmark(tier, player_position)
         stats_vs = self._compare_benchmark(player_detail, bench, tier)
 
         # Timeline analysis

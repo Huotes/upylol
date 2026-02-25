@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from statistics import mean
 from typing import Any
 
-from app.analysis.benchmarks import EloBenchmark, get_benchmark
+from app.analysis.benchmarks import EloBenchmark, get_role_benchmark
 from app.analysis.stats_extractor import AggregatedStats
 
 Severity = str  # "critical" | "important" | "minor"
@@ -471,9 +471,10 @@ _RULES = [
 def run_diagnostics(
     stats: AggregatedStats,
     tier: str,
+    role: str = "",
 ) -> list[Diagnostic]:
     """Execute all diagnostic rules, sorted by severity."""
-    bench = get_benchmark(tier)
+    bench = get_role_benchmark(tier, role)
     diagnostics: list[Diagnostic] = []
 
     for rule in _RULES:

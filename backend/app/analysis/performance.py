@@ -6,7 +6,7 @@ normalized against elo benchmarks.
 
 from dataclasses import dataclass
 
-from app.analysis.benchmarks import EloBenchmark, get_benchmark
+from app.analysis.benchmarks import EloBenchmark, get_role_benchmark
 from app.analysis.stats_extractor import AggregatedStats
 
 
@@ -145,9 +145,10 @@ def _score_objectives(stats: AggregatedStats, bench: EloBenchmark) -> DimensionS
 def analyze_performance(
     stats: AggregatedStats,
     tier: str,
+    role: str = "",
 ) -> PerformanceProfile:
-    """Run full performance analysis against elo benchmarks."""
-    bench = get_benchmark(tier)
+    """Run full performance analysis against elo (and role) benchmarks."""
+    bench = get_role_benchmark(tier, role)
 
     scorers = [
         _score_farming, _score_fighting, _score_vision,

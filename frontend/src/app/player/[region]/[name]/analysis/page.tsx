@@ -66,7 +66,7 @@ export default function AnalysisPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <ProfileCard player={player.data} />
+      <ProfileCard player={player.data} platform={region} />
       <PlayerNav region={region} name={gameName} tag={tag} />
 
       <StatsOverview data={analysis.data} />

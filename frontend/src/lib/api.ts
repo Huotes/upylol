@@ -38,6 +38,15 @@ export const api = {
   player: {
     get: (platform: string, gameName: string, tagLine: string) =>
       request(`/player/${platform}/${gameName}/${tagLine}`),
+    seasonStats: (
+      platform: string,
+      gameName: string,
+      tagLine: string,
+      season = "current",
+    ) =>
+      request(
+        `/player/${platform}/${gameName}/${tagLine}/season-stats?season=${encodeURIComponent(season)}`,
+      ),
   },
 
   matches: {

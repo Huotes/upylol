@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { POSITION_NAMES } from "@/lib/constants";
 import type { AnalysisResponse } from "@/types";
 
 interface StatsOverviewProps {
@@ -26,9 +27,10 @@ function StatItem({ label, value, sub, color }: StatItemProps) {
 
 export function StatsOverview({ data }: StatsOverviewProps) {
   const wrColor = data.win_rate >= 50 ? "text-win" : "text-loss";
+  const roleName = POSITION_NAMES[data.primary_role] ?? "";
 
   return (
-    <Card className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+    <Card className="grid grid-cols-2 gap-6 sm:grid-cols-5">
       <StatItem label="Partidas" value={data.games_analyzed} />
       <StatItem
         label="Win Rate"
@@ -45,6 +47,13 @@ export function StatsOverview({ data }: StatsOverviewProps) {
         value={data.losses}
         color="text-loss"
       />
+      {roleName && (
+        <StatItem
+          label="Role Principal"
+          value={roleName}
+          sub="Benchmarks ajustados"
+        />
+      )}
     </Card>
   );
 }

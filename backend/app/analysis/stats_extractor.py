@@ -4,6 +4,7 @@ Single responsibility: transform raw match JSON into clean stat dicts.
 Used by both performance analyzer and diagnostics engine (DRY).
 """
 
+from collections import Counter
 from dataclasses import dataclass, field
 from statistics import mean, stdev
 from typing import Any
@@ -52,6 +53,7 @@ class AggregatedStats:
     kda_stddev: float = 0.0
     cs_stddev: float = 0.0
     deaths_stddev: float = 0.0
+    primary_role: str = ""
     per_match: list[PlayerMatchStats] = field(default_factory=list)
 
 
@@ -126,6 +128,8 @@ def aggregate_stats(
 
     cs_list = [s.cs_per_min for s in per_match]
 
+    role = detect_primary_role(per_match)
+
     return AggregatedStats(
         games_analyzed=n,
         wins=sum(1 for s in per_match if s.win),
@@ -143,5 +147,22 @@ def aggregate_stats(
         kda_stddev=stdev(kda_list) if n > 1 else 0.0,
         cs_stddev=stdev(cs_list) if n > 1 else 0.0,
         deaths_stddev=stdev([float(d) for d in deaths_list]) if n > 1 else 0.0,
+        primary_role=role,
         per_match=per_match,
     )
+
+
+def detect_primary_role(per_match: list[PlayerMatchStats]) -> str:
+    """Detect the most played role from match history.
+
+    Returns one of: TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY, or "" if unknown.
+    """
+    if not per_match:
+        return ""
+
+    positions = [m.position for m in per_match if m.position]
+    if not positions:
+        return ""
+
+    counts = Counter(positions)
+    return counts.most_common(1)[0][0]

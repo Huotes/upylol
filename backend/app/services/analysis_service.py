@@ -38,14 +38,15 @@ class AnalysisService:
         if cached:
             return cached
 
-        # 1. Aggregate raw stats
+        # 1. Aggregate raw stats (includes primary role detection)
         stats = aggregate_stats(matches, puuid)
+        role = stats.primary_role
 
-        # 2. Performance scoring
-        performance = analyze_performance(stats, tier)
+        # 2. Performance scoring (role-aware benchmarks)
+        performance = analyze_performance(stats, tier, role)
 
-        # 3. Diagnostics
-        diagnostics = run_diagnostics(stats, tier)
+        # 3. Diagnostics (role-aware benchmarks)
+        diagnostics = run_diagnostics(stats, tier, role)
 
         # 4. Champion analysis
         champions = analyze_champions(stats.per_match)
@@ -60,6 +61,7 @@ class AnalysisService:
             "games_analyzed": stats.games_analyzed,
             "wins": stats.wins,
             "losses": stats.losses,
+            "primary_role": role,
             "win_rate": (
                 round(stats.wins / stats.games_analyzed * 100, 1)
                 if stats.games_analyzed else 0.0

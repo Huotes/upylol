@@ -63,7 +63,7 @@ export default function PlayerPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <ProfileCard player={player.data} />
+      <ProfileCard player={player.data} platform={region} />
       <PlayerNav region={region} name={gameName} tag={tag} />
 
       {/* Game count filter */}

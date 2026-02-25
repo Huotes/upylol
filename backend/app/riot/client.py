@@ -152,6 +152,7 @@ class RiotClient:
         queue: int | None = 420,
         start: int = 0,
         start_time: int | None = None,
+        end_time: int | None = None,
     ) -> list[str]:
         """Fetch recent match IDs for a player."""
         params: dict[str, Any] = {"count": count, "start": start}
@@ -159,6 +160,8 @@ class RiotClient:
             params["queue"] = queue
         if start_time is not None:
             params["startTime"] = start_time
+        if end_time is not None:
+            params["endTime"] = end_time
 
         return await self._request(
             self._region_url(platform),

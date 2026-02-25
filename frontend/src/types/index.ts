@@ -80,6 +80,7 @@ export interface AnalysisResponse {
   wins: number;
   losses: number;
   win_rate: number;
+  primary_role: string;
   performance: Performance;
   diagnostics: Diagnostic[];
   best_champions: ChampionPerformance[];
@@ -270,6 +271,24 @@ export interface MatchDetailAnalysis {
 export interface MatchDetailResponse {
   match: MatchData;
   analysis: MatchDetailAnalysis;
+}
+
+/* ── Season Stats ─────────────────────────────────── */
+
+export interface SeasonOption {
+  key: string;
+  label: string;
+}
+
+export interface SeasonStats {
+  season: string;
+  season_label: string;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  games_played: number;
+  primary_role: string;
+  available_seasons: SeasonOption[];
 }
 
 /* ── Game count filter options ─────────────────────── */
