@@ -55,6 +55,18 @@ def get_season(key: str) -> Season | None:
     return _SEASON_MAP.get(key)
 
 
+def get_current_season() -> Season | None:
+    """Get the most recent season (last in the list)."""
+    import time
+
+    now = int(time.time())
+    for season in reversed(SEASONS):
+        if season.start_ts <= now < season.end_ts:
+            return season
+    # Fallback: return last season if none matches
+    return SEASONS[-1] if SEASONS else None
+
+
 def get_available_seasons() -> list[dict[str, str]]:
     """Return list of seasons for frontend dropdown."""
     return [{"key": s.key, "label": s.label} for s in SEASONS]

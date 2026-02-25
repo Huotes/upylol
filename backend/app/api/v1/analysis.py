@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Path, Query
 from app.core.dependencies import get_cache_service, get_riot_client
 from app.core.exceptions import AppError
 from app.riot.client import RiotClient
+from app.riot.seasons import get_current_season
 from app.schemas.responses import AnalysisResponse, ErrorResponse
 from app.services.analysis_service import AnalysisService
 from app.services.cache_service import CacheService
@@ -17,6 +18,9 @@ from app.services.player_service import PlayerService
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# When count == 100 the frontend means "Temporada" — fetch ALL season matches.
+_SEASON_COUNT_THRESHOLD = 100
 
 
 @router.get(
@@ -40,10 +44,15 @@ async def get_analysis(
     ],
     riot: Annotated[RiotClient, Depends(get_riot_client)],
     cache: Annotated[CacheService, Depends(get_cache_service)],
-    count: Annotated[int, Query(ge=5, le=100)] = 30,
+    count: Annotated[int, Query(ge=5, le=500)] = 30,
     queue: int | None = 420,
+    role: str = "",
 ) -> dict[str, Any]:
-    """Run full analysis: performance, diagnostics, champions, trends."""
+    """Run full analysis: performance, diagnostics, champions, trends.
+
+    When count >= 100, fetches ALL matches in the current season (paginated).
+    The optional `role` param forces benchmark comparison against a specific role.
+    """
     # 1. Resolve player profile
     player_svc = PlayerService(riot, cache)
     profile = await player_svc.get_profile(game_name, tag_line, platform)
@@ -54,9 +63,22 @@ async def get_analysis(
     if not puuid:
         raise AppError("Could not resolve player PUUID", 404)
 
-    # 2. Fetch match history
+    # 2. Fetch match history (paginate for full season when count >= 100)
     match_svc = MatchService(riot, cache)
-    matches = await match_svc.get_match_history(puuid, platform, count, queue)
+
+    start_time = None
+    end_time = None
+    if count >= _SEASON_COUNT_THRESHOLD:
+        season = get_current_season()
+        if season:
+            start_time = season.start_ts
+            end_time = season.end_ts
+
+    matches = await match_svc.get_match_history(
+        puuid, platform, count, queue,
+        start_time=start_time,
+        end_time=end_time,
+    )
 
     if not matches:
         logger.info(
@@ -69,6 +91,6 @@ async def get_analysis(
             404,
         )
 
-    # 3. Run analysis pipeline
+    # 3. Run analysis pipeline (role param overrides auto-detection if set)
     analysis_svc = AnalysisService(cache)
-    return await analysis_svc.full_analysis(matches, puuid, tier)
+    return await analysis_svc.full_analysis(matches, puuid, tier, role_override=role)

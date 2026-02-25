@@ -31,16 +31,22 @@ class AnalysisService:
         matches: list[dict[str, Any]],
         puuid: str,
         tier: str,
+        role_override: str = "",
     ) -> dict[str, Any]:
-        """Run complete analysis pipeline."""
-        cache_key = CacheService.key("analysis", puuid, str(len(matches)))
+        """Run complete analysis pipeline.
+
+        If role_override is set, benchmarks use that role instead of auto-detected.
+        """
+        cache_key = CacheService.key(
+            "analysis", puuid, str(len(matches)), role_override,
+        )
         cached = await self._cache.get(cache_key)
         if cached:
             return cached
 
         # 1. Aggregate raw stats (includes primary role detection)
         stats = aggregate_stats(matches, puuid)
-        role = stats.primary_role
+        role = role_override or stats.primary_role
 
         # 2. Performance scoring (role-aware benchmarks)
         performance = analyze_performance(stats, tier, role)

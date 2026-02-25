@@ -37,16 +37,24 @@ class MatchService:
         platform: str = "br1",
         count: int = 20,
         queue: int | None = 420,
+        start_time: int | None = None,
+        end_time: int | None = None,
     ) -> list[dict[str, Any]]:
-        """Fetch recent matches with per-match caching and controlled concurrency."""
-        # Check if full result is cached
-        history_key = CacheService.key("history", puuid, str(count), str(queue or 0))
+        """Fetch matches with per-match caching and controlled concurrency.
+
+        When start_time/end_time are provided, paginates to fetch ALL matches
+        in that range (capped at 500). Otherwise fetches `count` recent.
+        """
+        time_suffix = f"{start_time or 0}_{end_time or 0}"
+        history_key = CacheService.key(
+            "history", puuid, str(count), str(queue or 0), time_suffix,
+        )
         cached_history = await self._cache.get(history_key)
         if cached_history:
             return cached_history
 
-        match_ids = await self._riot.get_match_ids(
-            puuid, platform, count=count, queue=queue,
+        match_ids = await self._get_all_match_ids(
+            puuid, platform, count, queue, start_time, end_time,
         )
 
         if not match_ids:
@@ -69,11 +77,52 @@ class MatchService:
             if isinstance(result, dict):
                 matches.append(result)
 
-        # Cache assembled history for a short TTL (new matches may come in)
         if matches:
             await self._cache.set(history_key, matches, settings.CACHE_TTL_MATCHES)
 
         return matches
+
+    async def _get_all_match_ids(
+        self,
+        puuid: str,
+        platform: str,
+        count: int,
+        queue: int | None,
+        start_time: int | None,
+        end_time: int | None,
+    ) -> list[str]:
+        """Fetch match IDs with pagination for time-range queries.
+
+        Without time range: single request with `count`.
+        With time range: paginate in batches of 100 until exhausted (cap 500).
+        """
+        if start_time is None and end_time is None:
+            return await self._riot.get_match_ids(
+                puuid, platform, count=count, queue=queue,
+            )
+
+        all_ids: list[str] = []
+        batch_size = 100
+        max_total = 500
+        offset = 0
+
+        while offset < max_total:
+            batch = await self._riot.get_match_ids(
+                puuid, platform,
+                count=batch_size,
+                queue=queue,
+                start=offset,
+                start_time=start_time,
+                end_time=end_time,
+            )
+            if not batch:
+                break
+            all_ids.extend(batch)
+            offset += len(batch)
+            if len(batch) < batch_size:
+                break
+
+        return all_ids
 
     async def get_match_detail(
         self,
