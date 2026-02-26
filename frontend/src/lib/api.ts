@@ -70,7 +70,12 @@ export const api = {
       gameName: string,
       tagLine: string,
       count = 30,
-    ) => request(`/analysis/${platform}/${gameName}/${tagLine}?count=${count}`),
+      role = "",
+    ) => {
+      const params = new URLSearchParams({ count: String(count) });
+      if (role) params.set("role", role);
+      return request(`/analysis/${platform}/${gameName}/${tagLine}?${params}`);
+    },
   },
 
   champions: {

@@ -9,19 +9,21 @@ export function useAnalysis(
   gameName: string,
   tagLine: string,
   count = 30,
+  role = "",
 ) {
   return useQuery<AnalysisResponse>({
-    queryKey: ["analysis", platform, gameName, tagLine, count],
+    queryKey: ["analysis", platform, gameName, tagLine, count, role],
     queryFn: () =>
       api.analysis.get(
         platform,
         gameName,
         tagLine,
         count,
+        role,
       ) as Promise<AnalysisResponse>,
     enabled: Boolean(gameName && tagLine),
     staleTime: 5 * 60 * 1000,
-    // Keep previous data visible while fetching new count
+    // Keep previous data visible while fetching new count/role
     placeholderData: keepPreviousData,
   });
 }

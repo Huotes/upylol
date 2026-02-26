@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePlayer } from "@/hooks/usePlayer";
 import { useAnalysis } from "@/hooks/useAnalysis";
@@ -11,10 +11,14 @@ import { DimensionBar } from "@/components/analysis/DimensionBar";
 import { DiagnosticCard } from "@/components/analysis/DiagnosticCard";
 import { StatsOverview } from "@/components/analysis/StatsOverview";
 import { TrendList } from "@/components/analysis/TrendList";
+import { GameCountSelector } from "@/components/analysis/GameCountSelector";
+import { RoleFilter } from "@/components/analysis/RoleFilter";
 import { ScoreRing } from "@/components/ui/ScoreRing";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { CardSkeleton } from "@/components/ui/Skeleton";
 import { ErrorDisplay } from "@/components/ui/ErrorDisplay";
+import { POSITION_NAMES } from "@/lib/constants";
+import type { GameCount } from "@/types";
 
 interface PageProps {
   params: Promise<{ region: string; name: string }>;
@@ -26,8 +30,11 @@ export default function AnalysisPage({ params }: PageProps) {
   const tag = searchParams.get("tag") ?? "BR1";
   const gameName = decodeURIComponent(name);
 
+  const [gameCount, setGameCount] = useState<GameCount>(30);
+  const [role, setRole] = useState("");
+
   const player = usePlayer(region, gameName, tag);
-  const analysis = useAnalysis(region, gameName, tag, 50);
+  const analysis = useAnalysis(region, gameName, tag, gameCount, role);
 
   if (player.isLoading || analysis.isLoading) {
     return (
@@ -63,11 +70,42 @@ export default function AnalysisPage({ params }: PageProps) {
   }
 
   const { performance, diagnostics, trends } = analysis.data;
+  const detectedRole = analysis.data.primary_role;
+  const activeRole = role || detectedRole;
+  const activeRoleLabel = POSITION_NAMES[activeRole] ?? activeRole;
 
   return (
     <div className="space-y-6">
       <ProfileCard player={player.data} platform={region} />
       <PlayerNav region={region} name={gameName} tag={tag} />
+
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <GameCountSelector
+          value={gameCount}
+          onChange={setGameCount}
+          loading={analysis.isFetching}
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-text-secondary">Benchmarks:</span>
+          <RoleFilter
+            value={role}
+            detectedRole={detectedRole}
+            onChange={setRole}
+            loading={analysis.isFetching}
+          />
+        </div>
+      </div>
+
+      {/* Role indicator */}
+      {activeRoleLabel && (
+        <p className="text-xs text-text-secondary">
+          Comparando com benchmarks de{" "}
+          <span className="font-medium text-accent">{activeRoleLabel}</span>
+          {" · "}
+          {analysis.data.games_analyzed} partidas analisadas
+        </p>
+      )}
 
       <StatsOverview data={analysis.data} />
 
